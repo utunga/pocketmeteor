@@ -1,0 +1,33 @@
+<head>
+  <title>Pocketmoney</title>
+</head>
+
+<body>
+
+  <div class="container" id="main-pane">
+     {{> accounts}}
+  </div>
+
+  
+</body>
+
+<template name="accounts">
+  {{#if loading}}
+    <div id="accounts">Loading...</div>
+  {{else}}
+    <div class="container" id="accounts">
+      {{#each accounts}}
+        {{> account}}
+      {{/each}}
+    </div>
+  {{/if}}
+</template>
+
+<template name="account">
+  <div class="row account">
+    <div class="span8 offset2" id="outer">
+    <span class="name">{{ name }}</span>
+    <span class="balance">{{formatCurrency balance}}</span>
+    </div>
+  </div>
+</template>
