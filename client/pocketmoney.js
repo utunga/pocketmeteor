@@ -8,22 +8,31 @@ Events = new Meteor.Collection("events");
 var accountsHandle = Meteor.subscribe('accounts');
 
 // Subscribe to 'events' collection on startup
-Meteor.subscribe('events');
+var eventsHandle = Meteor.subscribe('events');
 
-Meteor.startup(function () {
-	
-    Meteor.call('getBalances', function(err,result) {
+var updateBalances = function() {
+	Meteor.call('getBalances', function(err,result) {
       if (err === undefined) {
       	var balances = {};
+      	console.log("getBalances call");
+      	console.log(err);
+      	console.log(result);
       	$.each(result,function(i, row) {
-      		balances["" + row._id] = row.balance;
+      		balances[row._id] = row.balance;
       	});
         Session.set("balances", balances);
       } else {
         console.log(err);
       }
     });
+}
+
+Events.find().observeChanges({
+  changed: updateBalances,
+  added: updateBalances,
+  removed: updateBalances
 });
+
 
 ////////// Accounts //////////
 
