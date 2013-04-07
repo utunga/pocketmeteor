@@ -3,22 +3,22 @@
 // Define Minimongo collections to match server/publish.js.
 Accounts = new Meteor.Collection("accounts");
 Events = new Meteor.Collection("events");
-Balances = new Meteor.Collection("balances");
 
-var accountsHandle;
+// Subscribe to 'accounts' collection on startup.
+var accountsHandle = Meteor.subscribe('accounts');
+
+// Subscribe to 'events' collection on startup
+Meteor.subscribe('events');
 
 Meteor.startup(function () {
-	// Subscribe to 'accounts' collection on startup.
-	accountsHandle = Meteor.subscribe('accounts');
-
-	// Subscribe to 'events' collection on startup
-	Meteor.subscribe('events');
-
+	
     Meteor.call('getBalances', function(err,result) {
       if (err === undefined) {
-        Session.set("balances", result);
-        console.log("here");
-        console.log(result);
+      	var balances = {};
+      	$.each(result,function(i, row) {
+      		balances["" + row._id] = row.balance;
+      	});
+        Session.set("balances", balances);
       } else {
         console.log(err);
       }
@@ -28,7 +28,7 @@ Meteor.startup(function () {
 ////////// Accounts //////////
 
 Template.accounts.loading = function () {
-  return false; //accountsHandle===undefined || !accountsHandle.ready();
+  return accountsHandle==null || !accountsHandle.ready();
 };
 
 
@@ -41,15 +41,19 @@ Template.accounts.accounts = function () {
 };
 
 Template.account.balance = function() {
-	var accountEvents = Events.find({account_id: this._id});
-	var balance = 0;
-	accountEvents.forEach(function (nextEvent) {
-			balance = balance + nextEvent.amt;
-	})
-	return balance;
+	var balances = Session.get("balances");
+	if (balances && balances[this._id]) {
+		return balances[this._id];
+	}
+	else {
+		var accountEvents = Events.find({account_id: this._id});
+		var balance = 0;
+		accountEvents.forEach(function (nextEvent) {
+				balance = balance + nextEvent.amt;
+		})
+		return balance;
+	}
 };
-
-
 
 // Some random handle bars stuff ... not sure where to put
 Handlebars.registerHelper('formatCurrency', function(value) {
